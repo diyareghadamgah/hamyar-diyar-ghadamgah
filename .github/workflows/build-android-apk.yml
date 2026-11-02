@@ -1,0 +1,88 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      ORG_GRADLE_PROJECT_rnllamaBuildFromSource: 'true'
+      RNLLAMA_SKIP_POSTINSTALL: '1'
+      PLUS_STORE_GATE: 'true'
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /opt/ghc
+          df -h /
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.21.0'
+          cache: yarn
+
+      - name: Install Yarn Classic
+        run: npm install --global yarn@1.22.22
+
+      - name: Install JavaScript dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Validate Persian resources
+        run: |
+          node scripts/validate-l10n.js
+          node scripts/verify-fonts.js
+
+      - name: Derive native model variants
+        run: |
+          VARIANTS=$(node scripts/verify-android-payload.js --print-variants)
+          echo "ORG_GRADLE_PROJECT_rnllamaVariants=$VARIANTS" >> "$GITHUB_ENV"
+
+      - name: Set up Hexagon SDK
+        uses: ./.github/actions/setup-hexagon-sdk
+
+      - name: Create CI-only environment files
+        run: |
+          cat > .env <<'ENV'
+          FIREBASE_FUNCTIONS_URL=https://example.invalid
+          SUPABASE_URL=https://example.invalid
+          SUPABASE_ANON_KEY=ci-placeholder
+          PALSHUB_API_BASE_URL=https://example.invalid
+          APP_URL=pocketpal://app
+          ENABLE_PALSHUB_INTEGRATION=false
+          ENABLE_AUTHENTICATION=false
+          ENABLE_OFFLINE_MODE=true
+          ENV
+          mkdir -p android/app
+          cat > android/app/google-services.json <<'JSON'
+          {"project_info":{"project_number":"000000000000","project_id":"ci-placeholder","storage_bucket":"ci-placeholder.invalid"},"client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000","android_client_info":{"package_name":"com.pocketpalai"}},"api_key":[{"current_key":"ci-placeholder"}]}]}
+          JSON
+
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          set -o pipefail
+          ./gradlew assembleProdDebug --no-daemon 2>&1 | tee android-build.log
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: hamyar-diyar-ghadamgah-android-debug
+          path: android/app/build/outputs/apk/prod/debug/*.apk
+          if-no-files-found: error
+          retention-days: 14
