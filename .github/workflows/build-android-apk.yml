@@ -73,6 +73,19 @@ jobs:
           {"project_info":{"project_number":"000000000000","project_id":"ci-placeholder","storage_bucket":"ci-placeholder.invalid"},"client":[{"client_info":{"mobilesdk_app_id":"1:000000000000:android:0000000000000000","android_client_info":{"package_name":"com.pocketpalai"}},"api_key":[{"current_key":"ci-placeholder"}]}]}
           JSON
 
+      - name: Generate CI debug keystore
+        run: |
+          keytool -genkeypair -v \
+            -keystore android/app/debug.keystore \
+            -storetype JKS \
+            -storepass android \
+            -alias androiddebugkey \
+            -keypass android \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname "CN=Android Debug,O=Android,C=US"
+
       - name: Build debug APK
         working-directory: android
         run: |
