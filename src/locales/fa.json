@@ -289,7 +289,9 @@
       "unknownGroup": "نامشخص",
       "availableToUse": "آماده استفاده",
       "availableToDownload": "قابل دانلود",
-      "useAddButtonForMore": "برای یافتن مدل‌های بیشتر از دکمه + استفاده کنید"
+      "useAddButtonForMore": "برای یافتن مدل‌های بیشتر از دکمه + استفاده کنید",
+      "recommendedForDevice": "مدل‌های پیشنهادی برای گوشی من",
+      "recommendedDescription": "بر اساس توان سخت‌افزاری گوشی شما"
     },
     "vision": "بینایی",
     "mmproj": "پروجکتور",

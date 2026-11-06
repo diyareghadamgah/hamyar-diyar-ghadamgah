@@ -28,13 +28,14 @@ import {
 import {uiStore, modelStore, hfStore, UIStore, serverStore} from '../../store';
 
 import {L10nContext} from '../../utils';
-import {Model, ModelOrigin} from '../../utils/types';
+import {Model, ModelOrigin, ModelType} from '../../utils/types';
 import {ErrorState} from '../../utils/errors';
 
 export const ModelsScreen: React.FC = observer(() => {
   const l10n = useContext(L10nContext);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [hfSearchVisible, setHFSearchVisible] = useState(false);
+  const [recommendedExpanded, setRecommendedExpanded] = useState(true);
   const [isCopyingModel, setIsCopyingModel] = useState(false);
   const [selectedModel, setSelectedModel] = useState<Model | undefined>();
   const [settingsVisible, setSettingsVisible] = useState(false);
@@ -268,6 +269,9 @@ export const ModelsScreen: React.FC = observer(() => {
 
   const activeModelId = modelStore.activeModel?.id;
   const models = modelStore.displayModels;
+  const recommendedModels = models.filter(
+    model => model.isRulePreset && model.modelType === ModelType.LLM,
+  );
 
   // useMemo uses shallow comaprison for dependencies,
   // so we use computed instead for deep comparison
@@ -399,6 +403,32 @@ export const ModelsScreen: React.FC = observer(() => {
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.listContainer}
+        ListHeaderComponent={
+          recommendedModels.length > 0 ? (
+            <ModelAccordion
+              group={{
+                type: l10n.models.labels.recommendedForDevice,
+                items: recommendedModels,
+              }}
+              expanded={recommendedExpanded}
+              description={l10n.models.labels.recommendedDescription}
+              onPress={() => setRecommendedExpanded(value => !value)}>
+              <FlatList
+                data={recommendedModels}
+                keyExtractor={item => item.id}
+                scrollEnabled={false}
+                renderItem={({item}) => (
+                  <ModelCard
+                    model={item}
+                    activeModelId={activeModelId}
+                    onOpenSettings={() => handleOpenSettings(item)}
+                    onOpenServerDetails={handleOpenServerDetails}
+                  />
+                )}
+              />
+            </ModelAccordion>
+          ) : undefined
+        }
         data={flatListModels}
         keyExtractor={item => item.type}
         extraData={activeModelId}

@@ -289,7 +289,9 @@
       "unknownGroup": "Unknown",
       "availableToUse": "Ready to Use",
       "availableToDownload": "Available to Download",
-      "useAddButtonForMore": "Use + button to find more models"
+      "useAddButtonForMore": "Use + button to find more models",
+      "recommendedForDevice": "Models recommended for my phone",
+      "recommendedDescription": "Recommended based on your phone's hardware capabilities"
     },
     "vision": "Vision",
     "mmproj": "Projector",
